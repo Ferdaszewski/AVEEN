@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  database:
+    image: postgres:16
+    container_name: aveey-db
+    environment:
+      POSTGRES_DB: 'aveey_dev'
+      POSTGRES_USER: 'aveey_dev'
+      POSTGRES_PASSWORD: 'aveeyDevPassword'
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./databases/init-scripts:/docker-entrypoint-initdb.d
+      - pg-data:/var/lib/postgres/data
+volumes:
+  pg-data:

@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS space_pop (
+  id SERIAL PRIMARY KEY,
+  pop INTEGER NOT NULL,
+  fetched_at TIMESTAMP NOT NULL DEFAULT current_timestamp
+)
