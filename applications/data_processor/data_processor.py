@@ -14,8 +14,8 @@ def create_video(image_dir, video_filename):
     (ffmpeg
      .input(image_dir, pattern_type='glob', framerate=2)
      .filter('scale', size='hd1080', force_original_aspect_ratio='decrease')
-     .filter('minterpolate', fps='24', scd='none', mi_mode='mci', mc_mode='obmc', search_param=128, me='epzs', vsbmc=1)
-     .output(output, movflags='faststart', pix_fmt='yuv420p', r=24)
+     .filter('minterpolate', fps='60', scd='none', mi_mode='mci', mc_mode='obmc', search_param=128, me='epzs', vsbmc=1)
+     .output(output, movflags='faststart', pix_fmt='yuv420p', r=60)
      .run())
 
 
