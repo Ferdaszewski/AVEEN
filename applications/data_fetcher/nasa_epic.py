@@ -6,7 +6,7 @@ import requests
 
 
 class NasaEpic:
-    def __init__(self, save_directory):
+    def __init__(self, save_directory=None):
         save_directory = os.environ.get("IMAGE_DIRECTORY") if save_directory is None else save_directory
         self.save_path = os.path.join(os.path.dirname(__file__), save_directory)
         os.mkdir(self.save_path)
@@ -28,10 +28,9 @@ class NasaEpic:
         images = requests.get("https://epic.gsfc.nasa.gov/api/natural/date/%s" % date)
         return [self.get_image(image) for image in images.json()]
 
-    def save_images(self, dbConnection):
-        today = datetime.utcnow().strftime("%Y-%m-%d")
-        saved_images = self.get_images(today)
-        with dbConnection as conn:
+    def save_images(self, db_connection, date=datetime.utcnow().strftime("%Y-%m-%d")):
+        saved_images = self.get_images(date)
+        with db_connection as conn:
             insert_image_sql = "INSERT INTO epic_images (image_path, image_metadata) VALUES (%s, %s)"
             for path, metadata in saved_images:
                 with conn.cursor() as cursor:
