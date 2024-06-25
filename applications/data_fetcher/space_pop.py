@@ -2,8 +2,7 @@ import requests
 
 
 class SpacePop:
-    @staticmethod
-    def get_space_pop():
+    def get_space_pop(self):
         print("Getting Space Population")
         response = requests.get("http://api.open-notify.org/astros.json")
         pop = response.json()["number"]
