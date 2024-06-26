@@ -1,18 +1,14 @@
 import os
-import shutil
+import tempfile
 import unittest
+from datetime import datetime
 from unittest.mock import Mock, call
 
+import boto3
 import responses
+from dotenv import load_dotenv
 
 from nasa_epic import NasaEpic
-
-
-def cleanup_dir(save_dir):
-    try:
-        shutil.rmtree(os.path.join(os.path.dirname(__file__), save_dir))
-    except FileNotFoundError:
-        pass
 
 
 class TestNasaEpicGetImages(unittest.TestCase):
@@ -24,16 +20,12 @@ class TestNasaEpicGetImages(unittest.TestCase):
     save_dir = "test_images"
 
     def setUp(self):
-        cleanup_dir(self.save_dir)
         self.nasa_epic = NasaEpic(self.save_dir)
         self.nasa_epic.get_image = Mock(name='get_image')
         self.mock_response = responses.get(
             f"https://epic.gsfc.nasa.gov/api/natural/date/{self.date}",
             json=self.image_data
         )
-
-    def cleanUp(self):
-        cleanup_dir(self.save_dir)
 
     @responses.activate
     def test_calls_api(self):
@@ -56,8 +48,24 @@ class TestNasaEpicGetImages(unittest.TestCase):
 class TestNasaEpicGetImage(unittest.TestCase):
     save_dir = 'test_images'
 
+    def cleanup_s3(self):
+        response = self.s3_bucket.delete_objects(
+            Delete={
+                'Objects': [
+                    {
+                        'Key': self.image_key
+                    }
+                ]
+            }
+        )
+
     def setUp(self):
-        cleanup_dir(self.save_dir)
+        load_dotenv()
+        self.s3_bucket = boto3.resource('s3',
+                                        aws_access_key_id=os.environ.get("BUCKETEER_AWS_ACCESS_KEY_ID"),
+                                        aws_secret_access_key=os.environ.get("BUCKETEER_AWS_SECRET_ACCESS_KEY"),
+                                        region_name=os.environ.get("BUCKETEER_AWS_REGION"),
+                                        ).Bucket(os.environ.get('BUCKETEER_BUCKET_NAME'))
         self.nasa_epic = NasaEpic(self.save_dir)
         self.image_filename = 'test-image-filename'
         self.year = '2023'
@@ -67,16 +75,16 @@ class TestNasaEpicGetImage(unittest.TestCase):
             'date': f'{self.year}-{self.month}-{self.day} 00:31:45',
             'image': self.image_filename,
         }
-        self.image_data = 'testimagedata'
+        self.image_key = f'{self.save_dir}/{self.year}-{self.month}-{self.day}/{self.image_filename}.png'
+        self.image_data = f'{datetime.utcnow()}'
         image_url = f"https://epic.gsfc.nasa.gov/archive/natural/{self.year}/{self.month}/{self.day}/png/{self.image_filename}.png"
         self.mock_response = responses.get(
             image_url,
             body=self.image_data,
-            match=[responses.matchers.request_kwargs_matcher({'stream': True})]
         )
 
-    def cleanUp(self):
-        cleanup_dir(self.save_dir)
+    def tearDown(self):
+        self.cleanup_s3()
 
     @responses.activate
     def test_gets_image_from_api(self):
@@ -85,9 +93,12 @@ class TestNasaEpicGetImage(unittest.TestCase):
 
     @responses.activate
     def test_saves_image(self):
-        image_path, _ = self.nasa_epic.get_image(self.image_json)
-        with open(image_path) as image_file:
-            self.assertEqual(self.image_data, image_file.read())
+        self.cleanup_s3()
+        image_key, _ = self.nasa_epic.get_image(self.image_json)
+        with tempfile.TemporaryFile() as data:
+            self.s3_bucket.download_fileobj(image_key, data)
+            data.seek(0)
+            self.assertEqual(self.image_data, data.read().decode('utf-8'))
 
     @responses.activate
     def test_returns_data(self):
