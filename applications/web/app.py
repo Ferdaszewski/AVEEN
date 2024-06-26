@@ -6,6 +6,7 @@ from support.database import setup_db_connection
 
 app = Flask(__name__)
 
+
 @app.route("/aveey")
 @app.route("/aveey/<date>")
 def main(date=None):
@@ -23,6 +24,7 @@ def main(date=None):
         world_pop=world_pop,
         space_pop=space_pop,
     )
+
 
 @app.route("/metrics")
 def main():
