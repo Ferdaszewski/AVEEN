@@ -23,3 +23,19 @@ def main(date=None):
         world_pop=world_pop,
         space_pop=space_pop,
     )
+
+@app.route("/metrics")
+def main():
+    with setup_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT sum(*) FROM video_pop")
+            row = cursor.fetchone()
+            videos = 0 if row is None else row[0]
+            cursor.execute("SELECT sum(*) FROM epic_images")
+            row = cursor.fetchone()
+            images = 0 if row is None else row[0]
+
+            return {
+                "images_dowloaded": images,
+                "videos_processed": videos,
+            }
