@@ -60,6 +60,8 @@ class DataProcessor:
             print("Starting video creation")
             self.create_video(image_glob, video_local_path)
             print(f"Video created: {video_local_path}")
+
+            # Available at https://bucketeer-3f5efd47-dcff-47cf-ab77-76a0f9c3b9b9.s3.us-east-1.amazonaws.com/videos/2024-06-11-earth.mp4
             self.s3_bucket.upload_file(video_local_path, video_key)
             print(f"Video uploaded to s3 with key {video_key}")
 
