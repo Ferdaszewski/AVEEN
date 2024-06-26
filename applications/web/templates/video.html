@@ -1,0 +1,18 @@
+<!doctype html>
+<head>
+    <title>AVEEY</title>
+    <style>
+        a {color: slategray}
+    </style>
+</head>
+<body style="background-color: black;color: lightgrey;font-family: sans-serif;text-align: center">
+<h2 style="color: cadetblue">A Video of Earth and (nearly) Everyone Yesterday (ish)</h2>
+<div>
+    <span>People in Video: {{ world_pop }}</span>
+    <span title="Because they were in space!">People not in Video: {{ space_pop }}</span>
+</div>
+<video autoplay loop muted src="{{ video_url }}" style="height: 90%;width: 100%;top: 10%;left: 0;position: absolute"></video>
+<div style="position: absolute;bottom: 0;width: 90%;opacity: 33%">
+    <a href="https://epic.gsfc.nasa.gov/about/epic">NASA EPIC</a> images interpolated into video with <a href="https://ffmpeg.org/ffmpeg-filters.html#minterpolate">ffmpeg</a>. Space population <a href="http://open-notify.org/Open-Notify-API/People-In-Space/">API</a>, World Population <a href="https://www.census.gov/popclock/">API</a>
+</div>
+</body>
