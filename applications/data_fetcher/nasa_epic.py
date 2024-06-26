@@ -58,3 +58,4 @@ class NasaEpic:
                 with conn.cursor() as cursor:
                     cursor.execute(insert_image_sql, (key, Json(metadata), new_date))
         print(f"Finished image gathering from NASA for {new_date}")
+        return new_date

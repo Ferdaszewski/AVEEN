@@ -35,22 +35,33 @@ class DataProcessor:
                 return rows if rows is None else [row[0] for row in rows]
 
     def process(self, day):
+        print(f"Processing started for {day}")
         image_keys = self.get_image_data(day)
-        if image_keys.len() == 0:
+        images_num = len(image_keys)
+        if images_num == 0:
+            print("No images found to process")
             return
+        print(f"Found {images_num} images to process")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             image_dir = os.path.join(tmpdir, 'images')
+            os.mkdir(image_dir)
             for image_key in image_keys:
                 file_name = image_key.split('/')[-1]
-                self.s3_bucket.download_file(image_key, os.path.join(image_dir, file_name))
+                file_path = os.path.join(image_dir, file_name)
+                print(f"Downloading image with key {image_key} from s3 to {file_path}")
+                with open(os.path.join(image_dir, file_name), 'wb') as data:
+                    self.s3_bucket.download_fileobj(image_key, data)
 
             image_glob = os.path.normpath(os.path.join(image_dir, '*.png'))
             video_name = f'{day}-earth.mp4'
             video_local_path = os.path.normpath(os.path.join(tmpdir, video_name))
             video_key = f'videos/{video_name}'
+            print("Starting video creation")
             self.create_video(image_glob, video_local_path)
+            print(f"Video created: {video_local_path}")
             self.s3_bucket.upload_file(video_local_path, video_key)
+            print(f"Video uploaded to s3 with key {video_key}")
 
             with setup_db_connection() as conn:
                 with conn.cursor() as cursor:
@@ -63,7 +74,4 @@ class DataProcessor:
 
                     insert_video_sql = "INSERT INTO video_pop (video_key, video_day, space_pop_id, world_pop_id) VALUES (%s, %s, %s, %s)"
                     cursor.execute(insert_video_sql, (video_key, day, space_pop_id, world_pop_id))
-
-
-if __name__ == "__main__":
-    DataProcessor().process('2024-06-11')
+        print("Processing finished")
