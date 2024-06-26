@@ -30,10 +30,10 @@ def main(date=None):
 def metrics():
     with setup_db_connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT sum(*) FROM video_pop")
+            cursor.execute("SELECT count(*) FROM video_pop")
             row = cursor.fetchone()
             videos = 0 if row is None else row[0]
-            cursor.execute("SELECT sum(*) FROM epic_images")
+            cursor.execute("SELECT count(*) FROM epic_images")
             row = cursor.fetchone()
             images = 0 if row is None else row[0]
 

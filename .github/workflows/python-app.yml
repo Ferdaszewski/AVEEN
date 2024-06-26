@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -35,5 +35,10 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with unittest
+      env:
+        BUCKETEER_AWS_ACCESS_KEY_ID: ${{ secrets.BUCKETEER_AWS_ACCESS_KEY_ID }}
+        BUCKETEER_AWS_REGION: ${{ secrets.BUCKETEER_AWS_REGION }}
+        BUCKETEER_AWS_SECRET_ACCESS_KEY: ${{ secrets.BUCKETEER_AWS_SECRET_ACCESS_KEY }}
+        BUCKETEER_BUCKET_NAME: ${{ secrets.BUCKETEER_BUCKET_NAME }}
       run: |
         python -m unittest discover -s applications/data_fetcher/
