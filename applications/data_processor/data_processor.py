@@ -3,6 +3,7 @@ import tempfile
 
 import boto3
 import ffmpeg
+import pika
 from dotenv import load_dotenv
 
 from support.database import setup_db_connection
@@ -10,7 +11,6 @@ from support.database import setup_db_connection
 
 class DataProcessor:
     def __init__(self):
-        load_dotenv()
         self.s3_bucket = boto3.resource(
             's3',
             aws_access_key_id=os.environ.get("BUCKETEER_AWS_ACCESS_KEY_ID"),
@@ -77,3 +77,24 @@ class DataProcessor:
                     insert_video_sql = "INSERT INTO video_pop (video_key, video_day, space_pop_id, world_pop_id) VALUES (%s, %s, %s, %s)"
                     cursor.execute(insert_video_sql, (video_key, day, space_pop_id, world_pop_id))
         print("Processing finished")
+
+
+if __name__ == "__main__":
+    load_dotenv()
+    params = pika.URLParameters(os.environ.get('CLOUDAMQP_URL'))
+    connection = pika.BlockingConnection(params)
+    channel = connection.channel()
+    channel.queue_declare(queue='aveey_new_images')  # Declare a queue
+
+
+    def callback(ch, method, properties, body):
+        DataProcessor().process(body.decode('utf-8'))
+
+
+    channel.basic_consume('aveey_new_images',
+                          callback,
+                          auto_ack=True)
+
+    print(' [*] Waiting for messages:')
+    channel.start_consuming()
+    connection.close()
