@@ -27,7 +27,7 @@ def main(date=None):
 
 
 @app.route("/metrics")
-def main():
+def metrics():
     with setup_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("SELECT sum(*) FROM video_pop")
